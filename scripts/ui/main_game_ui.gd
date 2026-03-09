@@ -50,7 +50,7 @@ func _on_logout_response(err_code: int, _payload_bytes: PackedByteArray) -> void
 		_log("Logout success")
 		Session.on_logout()
 		Net.disconnect_from_server()
-		get_tree().change_scene_to_file("res://scenes/login.tscn")
+		#get_tree().change_scene_to_file("res://scenes/login.tscn")
 	else:
 		_log("Logout failed: err=%d" % err_code)
 		logout_button.disabled = false
