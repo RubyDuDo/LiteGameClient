@@ -1,4 +1,3 @@
-class_name NetworkManager
 extends Node
 
 ## High-level network manager providing protobuf-aware messaging.
@@ -10,12 +9,15 @@ extends Node
 ##   3. Net.send_message(Proto.MsgType.MsgType_Login, login_request)
 ##   4. Connect to signals: msg_received, connection_state_changed, etc.
 
-signal connection_state_changed(state: TcpConnection.State)
+signal connection_state_changed(state: int)
 signal msg_received(msg_type: int, err_code: int, payload_bytes: PackedByteArray)
 
 const Proto = preload("res://proto_gen/msg.gd")
+const TcpConn = preload("res://scripts/network/tcp_connection.gd")
 
-var _connection: TcpConnection
+enum ConnState { DISCONNECTED = 0, CONNECTING = 1, CONNECTED = 2 }
+
+var _connection
 var _reconnect_enabled: bool = false
 var _reconnect_timer: float = 0.0
 var _reconnect_interval: float = 3.0
@@ -23,7 +25,7 @@ var _host: String
 var _port: int
 
 func _ready() -> void:
-	_connection = TcpConnection.new()
+	_connection = TcpConn.new()
 	_connection.connected.connect(_on_connected)
 	_connection.disconnected.connect(_on_disconnected)
 	_connection.message_received.connect(_on_raw_message)
@@ -33,18 +35,18 @@ func _process(delta: float) -> void:
 		return
 	_connection.poll()
 
-	if _reconnect_enabled and _connection.get_state() == TcpConnection.State.DISCONNECTED:
+	if _reconnect_enabled and _connection.get_state() == TcpConn.State.DISCONNECTED:
 		_reconnect_timer -= delta
 		if _reconnect_timer <= 0:
 			_reconnect_timer = _reconnect_interval
 			print("[Net] Reconnecting to %s:%d ..." % [_host, _port])
 			_connection.connect_to_server(_host, _port)
 
-func get_state() -> TcpConnection.State:
+func get_state() -> int:
 	return _connection.get_state()
 
 func is_connected_to_server() -> bool:
-	return _connection.get_state() == TcpConnection.State.CONNECTED
+	return _connection.get_state() == TcpConn.State.CONNECTED
 
 # --- Connection API ---
 
@@ -83,11 +85,11 @@ func send_message(msg_type: int, payload = null) -> Error:
 func _on_connected() -> void:
 	_reconnect_timer = 0.0
 	print("[Net] Connected to %s:%d" % [_host, _port])
-	connection_state_changed.emit(TcpConnection.State.CONNECTED)
+	connection_state_changed.emit(ConnState.CONNECTED)
 
 func _on_disconnected() -> void:
 	print("[Net] Disconnected")
-	connection_state_changed.emit(TcpConnection.State.DISCONNECTED)
+	connection_state_changed.emit(ConnState.DISCONNECTED)
 
 func _on_raw_message(data: PackedByteArray) -> void:
 	var rsp = Proto.MsgRsp.new()

@@ -1,4 +1,3 @@
-class_name TcpConnection
 extends RefCounted
 
 ## Low-level TCP connection with length-prefixed message framing.
@@ -22,7 +21,6 @@ var _port: int
 
 func _init():
 	_tcp = StreamPeerTCP.new()
-	_tcp.set_no_delay(true)
 	_recv_buffer = PackedByteArray()
 
 func get_state() -> State:
@@ -66,6 +64,7 @@ func poll() -> void:
 
 		StreamPeerTCP.STATUS_CONNECTED:
 			if _state == State.CONNECTING:
+				_tcp.set_no_delay(true)
 				_state = State.CONNECTED
 				connected.emit()
 			_read_available()

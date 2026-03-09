@@ -34,11 +34,11 @@
 - `NetworkManager` — Autoload 单例，protobuf 感知的发送/接收接口，自动重连
 - 编写 `scripts/test_network.gd` 验证帧协议、Msg 打包、MsgRsp 解析
 
-### Step 4 — 登录与登出
-- 实现登录界面（输入账号密码）
-- 发送 `RequestLogin`，处理 `ResponseLogin`
-- 实现登出流程，发送 `RequestLogout`
-- 实现心跳机制 (`HeartBeat`)
+### Step 4 — 登录与登出 ✅
+- 登录场景 UI：服务器地址、账号密码输入，登录按钮，状态提示
+- 发送 `RequestLogin`，处理 `ResponseLogin`，成功后切换到主界面
+- 主界面显示角色信息、连接状态、日志，支持登出
+- `Session` Autoload 管理登录态和心跳定时发送
 
 ### Step 5 — 上报分数与排行榜
 - 扩展 proto 定义（新增分数上报和排行榜拉取消息）
@@ -53,11 +53,11 @@
 
 ## 当前进度
 
-> **当前步骤：Step 3 — 网络层封装（已完成）**
+> **当前步骤：Step 4 — 登录与登出（已完成）**
 >
-> 实现了两层网络架构：`TcpConnection`（TCP + 消息帧）和 `NetworkManager`（protobuf 消息收发）。
-> 线路格式与 GameServer 完全兼容：2 字节大端序长度头 + protobuf 负载。
-> 下一步进入 Step 4：实现登录与登出。
+> 实现了完整的登录/登出流程：登录界面 → 连接服务器 → 登录 → 主界面 → 登出 → 返回登录。
+> 心跳机制基于服务器下发的 `heartbeatSendInterval` 自动定时发送。
+> 下一步进入 Step 5：上报分数与排行榜。
 
 ## 服务器协议参考
 
@@ -105,10 +105,18 @@ sampleclient/
 ├── scripts/
 │   ├── network/
 │   │   ├── tcp_connection.gd   # TCP 连接 + 消息帧协议
-│   │   └── network_manager.gd  # Autoload 单例，protobuf 消息收发
+│   │   └── network_manager.gd  # Autoload "Net"，protobuf 消息收发
+│   ├── session.gd              # Autoload "Session"，登录态 + 心跳
+│   ├── ui/
+│   │   ├── login_ui.gd         # 登录界面逻辑
+│   │   └── main_game_ui.gd     # 主界面逻辑
 │   ├── test_proto.gd           # Protobuf 序列化测试
 │   └── test_network.gd         # 网络层测试
-├── scenes/                 # 场景文件（登录、主界面、排行榜等）
+├── scenes/
+│   ├── login.tscn              # 登录场景
+│   └── main_game.tscn          # 主界面场景
+├── doc/
+│   └── architecture.md         # 架构文档
 ├── project.godot
 └── README.md
 ```
