@@ -1,0 +1,103 @@
+syntax = "proto3";
+package MyGame;
+
+// Inlined from google/protobuf/any.proto.
+// Wire-format compatible with google.protobuf.Any (same field numbers/types).
+// Godobuf does not support multi-level package imports.
+message Any {
+    string type_url = 1;
+    bytes value = 2;
+}
+
+enum MsgType
+{
+    MsgType_Default = 0;
+    MsgType_Login = 1;
+    MsgType_Logout = 2;
+    MsgType_Act = 3;
+    MsgType_HeartBeat = 4;
+}
+
+enum MsgErrCode
+{
+    MsgErr_OK = 0;
+    MsgErr_Fail = 1;
+    MsgErr_NotExist = 2;
+    MsgErr_PasswdWrong = 3;
+}
+
+message MsgHead
+{
+    MsgType type = 1;
+}
+
+message MsgRspHead
+{
+    MsgType type = 1;
+    MsgErrCode res = 2;
+}
+
+message RequestLogin
+{
+    string strName = 1;
+    string strPass = 2;
+}
+
+message RoleInfo
+{
+    uint64 roleId = 1;
+    int32 roleLevel = 2;
+}
+message ConfigToClient
+{
+    int32 heartbeatSendInterval = 1;
+}
+message ResponseLogin
+{
+    RoleInfo roleInfo = 1;
+    ConfigToClient configInfo = 2;
+}
+
+message RequestLogout
+{
+    uint64 roleId = 1;
+}
+
+message ResponseLogout
+{
+    uint64 roleId = 1;
+}
+
+message RequestAct
+{
+    string action = 1;
+}
+
+message ResponseAct
+{
+    string action = 1;
+}
+
+message RequestHeartBeat
+{
+    uint64 roleId = 1;
+}
+
+message ResponseHeartBeat
+{
+    uint64 roleID = 1;    
+}
+
+message Msg
+{
+    MsgHead head = 1;
+    Any payload = 2;
+}
+
+
+
+message MsgRsp
+{
+    MsgRspHead head = 1;
+    Any payload = 2;
+}
