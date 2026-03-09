@@ -29,10 +29,10 @@
 - 使用 Godobuf 将 `.proto` 编译为 GDScript 类 → `proto_gen/msg.gd`
 - 编写 `scripts/test_proto.gd` 验证序列化与反序列化通过
 
-### Step 3 — 网络层封装
-- 实现 TCP 连接管理（连接、断开、重连）
-- 实现消息的打包（长度头 + Protobuf 二进制）与拆包
-- 封装统一的发送/接收接口
+### Step 3 — 网络层封装 ✅
+- `TcpConnection` — TCP 连接管理 + 2 字节大端序长度头消息帧协议
+- `NetworkManager` — Autoload 单例，protobuf 感知的发送/接收接口，自动重连
+- 编写 `scripts/test_network.gd` 验证帧协议、Msg 打包、MsgRsp 解析
 
 ### Step 4 — 登录与登出
 - 实现登录界面（输入账号密码）
@@ -53,11 +53,11 @@
 
 ## 当前进度
 
-> **当前步骤：Step 2 — 定义并编译 Protobuf 协议（已完成）**
+> **当前步骤：Step 3 — 网络层封装（已完成）**
 >
-> 已从 GameServer 同步 `msg.proto`，适配 Godobuf 后编译为 `proto_gen/msg.gd`。
-> 编写了 `scripts/test_proto.gd` 验证 RequestLogin、Msg+Any 包装、MsgRsp+ResponseLogin 的序列化与反序列化均正确。
-> 下一步进入 Step 3：封装网络层。
+> 实现了两层网络架构：`TcpConnection`（TCP + 消息帧）和 `NetworkManager`（protobuf 消息收发）。
+> 线路格式与 GameServer 完全兼容：2 字节大端序长度头 + protobuf 负载。
+> 下一步进入 Step 4：实现登录与登出。
 
 ## 服务器协议参考
 
@@ -77,6 +77,16 @@ message MsgRsp {
 
 消息类型通过 `MsgType` 枚举区分：`Login`、`Logout`、`Act`、`HeartBeat`。
 
+### 线路格式
+
+```
+[2 字节大端序长度头][protobuf 负载]
+```
+
+- 长度头仅表示负载长度，不包含自身 2 字节
+- 最大消息: 32,767 字节（signed short）
+- 客户端发送 `Msg`，服务器回复 `MsgRsp`
+
 ## 技术栈
 
 - **引擎**: Godot 4.4 (Forward+)
@@ -93,9 +103,11 @@ sampleclient/
 ├── proto/                  # .proto 源文件
 ├── proto_gen/              # Godobuf 编译生成的 GDScript
 ├── scripts/
-│   ├── network/            # 网络层（TCP 连接、消息收发）
-│   ├── protocol/           # 协议层（消息构造与解析）
-│   └── ui/                 # UI 控制脚本
+│   ├── network/
+│   │   ├── tcp_connection.gd   # TCP 连接 + 消息帧协议
+│   │   └── network_manager.gd  # Autoload 单例，protobuf 消息收发
+│   ├── test_proto.gd           # Protobuf 序列化测试
+│   └── test_network.gd         # 网络层测试
 ├── scenes/                 # 场景文件（登录、主界面、排行榜等）
 ├── project.godot
 └── README.md
